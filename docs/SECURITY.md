@@ -1,7 +1,7 @@
 # Security
 
 **Проект:** Persephone Music
-**Статус:** требования; реализация появится вместе с кодом
+**Статус:** требования и реализованные меры Stage 0
 **Связанные документы:** [ARCHITECTURE.md](../ARCHITECTURE.md), [docs/DATA_MODEL.md](DATA_MODEL.md), [docs/INTEGRATIONS.md](INTEGRATIONS.md)
 
 ---
@@ -58,6 +58,14 @@
 - `SESSION_SECRET` не должен совпадать с ключом шифрования.
 - Ротация ключей должна быть задокументирована до production-использования.
 
+Реализовано в Stage 0:
+
+- `app/src/config/index.js` валидирует обязательные переменные, протоколы URL, диапазоны и длину секретов;
+- ошибки конфигурации содержат имена переменных, но не их значения;
+- `describeConfig()` не включает секреты;
+- pino настроен на redaction паролей, токенов, cookie и ключей;
+- Last.fm session keys шифруются AES-256-GCM в формате `[formatVersion][keyVersion][iv:12][authTag:16][ciphertext]`.
+
 Запрещено коммитить:
 
 - API-ключи Last.fm, Lidarr, Navidrome;
@@ -76,6 +84,8 @@ Last.fm session key:
 - никогда не передаётся клиенту;
 - удаляется при отвязке аккаунта.
 
+Реализация Stage 0: `app/src/utils/secrets.js` (`encryptSecret`, `decryptSecret`, `readSecretKeyVersion`). Ключ и его версия передаются отдельно; поле `user_lastfm.encryption_key_version` хранит версию, необходимую для ротации.
+
 Персональные данные в открытом виде (email, история) защищаются средствами БД и доступом, а не шифрованием на уровне приложения, если не появится отдельное требование.
 
 ## 7. Сетевая безопасность
@@ -83,6 +93,8 @@ Last.fm session key:
 - PostgreSQL и Redis не публикуют порты на хост в базовой конфигурации.
 - Для локальной разработки допускается публикация только на `127.0.0.1` через отдельный override.
 - Navidrome и Lidarr не открываются в интернет без reverse proxy и дополнительной защиты.
+
+Реализовано в Stage 0: базовый `docker-compose.yml` не публикует порты PostgreSQL/Redis; `docker-compose.dev.yml` привязывает их к `127.0.0.1`; Navidrome и Lidarr опубликованы только на `127.0.0.1`.
 - API доступен через HTTPS; TLS завершается на reverse proxy.
 - Внутренние сервисы общаются по внутренней сети Docker.
 - CORS ограничен известными origin; wildcard в production запрещён.

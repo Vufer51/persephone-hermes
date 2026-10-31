@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  lint-and-unit-tests:
+    name: Линтер и unit-тесты
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Установка зависимостей
+        working-directory: app
+        run: npm ci
+
+      - name: Проверка зависимостей
+        working-directory: app
+        run: npm audit --audit-level=high
+
+      - name: ESLint
+        working-directory: app
+        run: npm run lint
+
+      - name: Unit-тесты
+        working-directory: app
+        run: npm test
+
+  migrations:
+    name: Миграции и схема БД
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16.15-alpine
+        env:
+          POSTGRES_DB: persephone_test
+          POSTGRES_USER: persephone
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U persephone -d persephone_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7.4.12-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://persephone:test@127.0.0.1:5432/persephone_test
+      TEST_DATABASE_URL: postgresql://persephone:test@127.0.0.1:5432/persephone_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Установка зависимостей
+        working-directory: app
+        run: npm ci
+
+      - name: Применение миграций на чистой базе
+        working-directory: app
+        run: npm run migrate
+
+      - name: Повторный запуск миграций идемпотентен
+        working-directory: app
+        run: npm run migrate
+
+      - name: Проверка схемы
+        working-directory: app
+        run: npm run verify:schema
+
+      - name: Интеграционные тесты миграций
+        working-directory: app
+        run: npm test
+
+  docker:
+    name: Docker build и Compose config
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      POSTGRES_PASSWORD: ci-postgres-password
+      SESSION_SECRET: ci-session-secret-at-least-32-characters-long
+      SECRET_ENCRYPTION_KEY: Y2ktc2VjcmV0LWVuY3J5cHRpb24ta2V5LTMyLWJ5dGU=
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Сборка production-образа
+        run: docker build --target production --tag persephone-app:ci ./app
+
+      - name: Проверка Compose (базовая конфигурация)
+        run: docker compose config --quiet
+
+      - name: Проверка Compose (локальный override)
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet

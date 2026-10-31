@@ -1,0 +1,9 @@
+node_modules
+coverage
+test
+eslint.config.js
+vitest.config.js
+*.md
+.env
+.env.*
+npm-debug.log*
