@@ -1,0 +1,60 @@
+name: Technical Task
+description: Инфраструктура, рефакторинг, производительность или технический долг
+title: "[Tech]: "
+labels: ["type: infrastructure", "priority: normal"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Контекст
+      description: Почему задача возникла и что произойдёт, если её не выполнить?
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Объём работ
+      description: Что входит и что явно не входит в задачу.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Критерии приёмки
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical
+    attributes:
+      label: Технические заметки
+      description: Предполагаемые изменения, миграции, влияние на CI и окружение.
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Риски и откат
+      description: Что может пойти не так и как откатить изменения?
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Зависимости
+      description: Связанные Issues, ADR и внешние условия.
+
+  - type: checkboxes
+    id: dod
+    attributes:
+      label: Definition of Done
+      options:
+        - label: Тесты добавлены или обновлены
+          required: true
+        - label: Документация обновлена
+          required: true
+        - label: Нет секретов и случайных файлов
+          required: true

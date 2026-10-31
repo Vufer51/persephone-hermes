@@ -1,0 +1,67 @@
+name: Feature Request
+description: Предложить новую функциональность
+title: "[Feature]: "
+labels: ["type: feature", "priority: normal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Опишите задачу так, чтобы её можно было проверить и реализовать без устного контекста.
+        Если предложение ещё не оформилось в задачу, используйте GitHub Discussions.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Контекст
+      description: Какую проблему решает функциональность и почему она нужна сейчас?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемый результат
+      description: Что должен получить пользователь или система?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Критерии приёмки
+      description: Проверяемые условия завершения задачи.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical
+    attributes:
+      label: Технические заметки
+      description: Предполагаемая реализация, зависимости, ограничения, влияние на БД и API.
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Зависимости
+      description: Связанные Issues, блокирующие задачи, ADR.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Рассмотренные альтернативы
+      description: Почему предложенный вариант предпочтительнее?
+
+  - type: checkboxes
+    id: dod
+    attributes:
+      label: Definition of Done
+      options:
+        - label: Критерии приёмки сформулированы проверяемо
+          required: true
+        - label: Учтено влияние на архитектуру и документацию
+          required: true
+        - label: Задача не дублирует существующий Issue
+          required: true

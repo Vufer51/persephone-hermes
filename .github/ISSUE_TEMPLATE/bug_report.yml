@@ -1,0 +1,84 @@
+name: Bug Report
+description: Сообщить об ошибке в работе Persephone Music
+title: "[Bug]: "
+labels: ["type: bug", "priority: normal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо за сообщение об ошибке. Не прикладывайте секреты, пароли, session keys и персональные данные.
+        Для уязвимостей используйте Security Advisories, а не публичный Issue.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Контекст
+      description: Что происходило и почему это важно? Какая функциональность затронута?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+      description: Минимальная последовательность действий.
+      placeholder: |
+        1. Запустить ...
+        2. Открыть ...
+        3. Нажать ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемое поведение
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Фактическое поведение
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Окружение
+      description: Версия, ОС, браузер/клиент, способ запуска (Docker/локально).
+      placeholder: "Persephone 0.1.0, Docker Compose, Chrome 130 / Windows 11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Логи и скриншоты
+      description: Удалите секреты, токены и персональные данные.
+      render: shell
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Предполагаемый приоритет
+      options:
+        - P1 High
+        - P2 Normal
+        - P3 Low
+        - P0 Critical
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: dod
+    attributes:
+      label: Definition of Done
+      options:
+        - label: Ошибка воспроизводится на актуальной версии
+          required: true
+        - label: В логах и описании нет секретов и персональных данных
+          required: true
+        - label: Указаны шаги воспроизведения и ожидаемое поведение
+          required: true

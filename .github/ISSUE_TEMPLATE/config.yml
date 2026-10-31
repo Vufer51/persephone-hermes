@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Вопросы и обсуждения
+    url: https://github.com/DrRocksoDevelopment/persephone/discussions
+    about: Общие вопросы, идеи и обсуждение архитектуры до оформления задачи
+  - name: Уязвимость безопасности
+    url: https://github.com/DrRocksoDevelopment/persephone/security/advisories/new
+    about: Сообщите об уязвимости конфиденциально, не создавайте публичный Issue

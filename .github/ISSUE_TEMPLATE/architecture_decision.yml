@@ -1,0 +1,66 @@
+name: Architecture Decision
+description: Предложить или зафиксировать архитектурное решение (ADR)
+title: "[ADR]: "
+labels: ["type: research", "status: needs-discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Существенные архитектурные решения фиксируются в `docs/adr/`.
+        Не меняйте принятые решения молча: сначала обсуждение и новый ADR.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Контекст
+      description: Какая ситуация требует решения?
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Проблема
+      description: Что именно нужно решить и какие ограничения действуют?
+    validations:
+      required: true
+
+  - type: textarea
+    id: options
+    attributes:
+      label: Рассмотренные варианты
+      description: Плюсы, минусы и стоимость каждого варианта.
+    validations:
+      required: true
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: Предлагаемое решение
+    validations:
+      required: true
+
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Последствия
+      description: Положительные, отрицательные и ограничения.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Статус ADR
+      options:
+        - Proposed
+        - Accepted
+        - Deprecated
+        - Superseded
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Связанные задачи и ADR
