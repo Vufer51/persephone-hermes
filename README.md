@@ -142,7 +142,7 @@ docker compose up -d
 - архитектурные решения фиксируются в [docs/adr/](docs/adr/);
 - документация обновляется вместе с кодом.
 
-Планирование, поля и статусы задач ведутся в [GitHub Project](https://github.com/orgs/DrRocksoDevelopment/projects/6); описание процесса — в [docs/PROJECT_MANAGEMENT.md](docs/PROJECT_MANAGEMENT.md).
+Планирование, поля и статусы задач ведутся в [GitHub Project](https://github.com/orgs/DrRocksoDevelopment/projects/6); описание процесса — в [docs/PROJECT_MANAGEMENT.md](docs/PROJECT_MANAGEMENT.md). Общие вопросы и идеи — в [GitHub Discussions](https://github.com/DrRocksoDevelopment/persephone/discussions).
 
 Подробности — в [AGENTS.md](AGENTS.md).
 

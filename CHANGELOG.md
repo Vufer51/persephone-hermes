@@ -18,6 +18,8 @@
 - Labels и Milestones для этапов проекта.
 - GitHub Project #6: доска, поля Status/Stage/Priority/Work Type/Component/Estimate, README проекта.
 - Issues #1–#6 для Stage 0, добавленные в Project с приоритетами и этапами.
+- GitHub Discussions включены для вопросов и предложений.
+- В `PROJECT_SPEC.md` добавлено примечание о фактическом состоянии репозитория.
 - Ветки `main` и `develop`.
 
 ### Changed
