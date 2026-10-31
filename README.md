@@ -4,8 +4,9 @@
 
 Persephone Music — самостоятельно размещаемая многопользовательская музыкальная платформа: стриминг собственной библиотеки, персональный музыкальный дневник, рекомендательная система и интеллектуальное управление библиотекой.
 
-> **Текущий статус:** инициализация проекта, Stage 0 — Infrastructure MVP.
-> Готовы спецификация, архитектурная документация и структура репозитория. Рабочий код, Docker Compose, схема БД, CI ещё не реализованы.
+> **Текущий статус:** Stage 0 — Infrastructure MVP реализован.
+> Работают API и Worker, миграции и начальная схема БД, Docker Compose, health checks, CI и тесты.
+> Бизнес-функциональность (пользователи, библиотека, воспроизведение, Last.fm, рекомендации) появится на следующих этапах.
 > Актуальное состояние: [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md).
 
 ## Документы
@@ -27,50 +28,37 @@ Persephone Music — самостоятельно размещаемая мно�
 
 ```text
 persephone/
-├── AGENTS.md               # правила разработки
-├── PROJECT_SPEC.md         # спецификация проекта
+├── AGENTS.md
+├── PROJECT_SPEC.md
 ├── README.md
 ├── ARCHITECTURE.md
 ├── ROADMAP.md
 ├── DEVELOPMENT_STATUS.md
 ├── TASKS.md
 ├── CHANGELOG.md
-├── .editorconfig
-├── .env.example            # шаблон конфигурации (без секретов)
-├── .gitignore
+├── docker-compose.yml          # базовый стек
+├── docker-compose.dev.yml      # публикация PostgreSQL/Redis на 127.0.0.1
+├── .env.example
 │
 ├── .github/
+│   ├── workflows/ci.yml
 │   ├── ISSUE_TEMPLATE/
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── dependabot.yml
 │
-├── app/                    # backend: API + Worker (структура зарезервирована)
-│   ├── README.md
-│   └── src/
-│       ├── api/
-│       │   ├── routes/
-│       │   └── middleware/
-│       ├── modules/
-│       │   ├── auth/
-│       │   ├── users/
-│       │   ├── library/
-│       │   ├── playback/
-│       │   ├── playlists/
-│       │   ├── recommendations/
-│       │   ├── lastfm/
-│       │   └── prefetch/
-│       ├── integrations/
-│       │   ├── navidrome/
-│       │   ├── lidarr/
-│       │   ├── lastfm/
-│       │   └── musicbrainz/
-│       ├── workers/
-│       ├── db/
-│       │   ├── migrations/
-│       │   └── queries/
-│       ├── services/
-│       ├── config/
-│       └── utils/
+├── app/                        # backend: API + Worker
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── eslint.config.js
+│   ├── vitest.config.js
+│   ├── src/
+│   │   ├── api/                # Fastify: приложение, сервер, health-маршруты
+│   │   ├── workers/            # BullMQ Worker, heartbeat, healthcheck
+│   │   ├── db/                 # пул, миграции, проверка схемы
+│   │   ├── services/           # Redis-клиент
+│   │   ├── config/             # валидация окружения
+│   │   └── utils/              # логи, таймауты, shutdown, шифрование
+│   └── test/                   # unit- и интеграционные тесты
 │
 ├── docs/
 │   ├── DATA_MODEL.md
@@ -81,22 +69,16 @@ persephone/
 │   ├── PROJECT_MANAGEMENT.md
 │   └── adr/
 │
-├── scripts/                # служебные скрипты (структура зарезервирована)
-│   └── README.md
-│
-└── web/                    # frontend (структура зарезервирована)
-    └── README.md
+├── scripts/                    # структура зарезервирована
+└── web/                        # frontend (структура зарезервирована)
 ```
 
-Каталоги `app/`, `web/` и `scripts/` пока содержат только README: код появится в задачах Stage 0 ([#2](https://github.com/DrRocksoDevelopment/persephone/issues/2)–[#6](https://github.com/DrRocksoDevelopment/persephone/issues/6)).
-
-## Технологический стек (целевой)
+## Технологический стек
 
 | Компонент | Технология |
 |---|---|
-| Backend | Node.js 22 LTS |
-| Язык | JavaScript, ESM |
-| HTTP API | Fastify |
+| Backend | Node.js 22 LTS, JavaScript ESM |
+| HTTP API | Fastify 5 |
 | База данных | PostgreSQL 16 |
 | Очереди и кэш | Redis 7, BullMQ |
 | Playback | Navidrome (Original First) |
@@ -104,27 +86,124 @@ persephone/
 | Метаданные | MusicBrainz |
 | Персональные музыкальные данные | Last.fm |
 | Контейнеризация | Docker Compose |
-| Web UI | отдельный frontend-проект |
+| Web UI | отдельный frontend-проект (не реализован) |
 
-## Требования (целевые)
+## Требования
 
-- Node.js 22 LTS и npm 10+.
-- Docker Engine 24+ и Docker Compose v2.
-- PostgreSQL 16 и Redis 7 (в Docker).
-- Доступ к Navidrome и Lidarr — собственным или существующим в инфраструктуре пользователя.
+- Docker Engine 24+ с Docker Compose v2 (или Docker Desktop).
+- Для локального запуска без Docker: Node.js 22.9+ и npm 10+.
 
 ## Быстрый старт
-
-**Сейчас недоступен:** запускаемого приложения ещё нет. После выполнения Stage 0 запуск будет выглядеть так:
 
 ```bash
 git clone https://github.com/DrRocksoDevelopment/persephone.git
 cd persephone
-cp .env.example .env    # заполнить значения
-docker compose up -d
+cp .env.example .env
 ```
 
-Эти команды появятся в README после того, как они будут реально проверены (задачи [#2](https://github.com/DrRocksoDevelopment/persephone/issues/2)–[#6](https://github.com/DrRocksoDevelopment/persephone/issues/6)).
+Заполните в `.env` как минимум `POSTGRES_PASSWORD`, `SESSION_SECRET` и `SECRET_ENCRYPTION_KEY`:
+
+```bash
+openssl rand -base64 48   # SESSION_SECRET
+openssl rand -base64 32   # SECRET_ENCRYPTION_KEY (ровно 32 байта)
+```
+
+В PowerShell секреты можно сгенерировать так:
+
+```powershell
+$bytes = New-Object byte[] 48
+[Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+[Convert]::ToBase64String($bytes)   # SESSION_SECRET
+
+$key = New-Object byte[] 32
+[Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($key)
+[Convert]::ToBase64String($key)     # SECRET_ENCRYPTION_KEY
+```
+
+Запуск:
+
+```bash
+docker compose up -d --build
+```
+
+Что происходит:
+
+1. Поднимаются PostgreSQL 16 и Redis 7 (порты наружу не публикуются).
+2. Одноразовый сервис `migrate` применяет миграции и завершается.
+3. Запускаются API и Worker.
+4. Запускаются Navidrome и Lidarr; их порты доступны только на `127.0.0.1`.
+
+Проверка:
+
+```bash
+curl http://127.0.0.1:3000/api/v1/health/live
+curl http://127.0.0.1:3000/api/v1/health/ready
+docker compose ps
+```
+
+`ready` возвращает `200`, когда доступны PostgreSQL и Redis, и `503` иначе. В PowerShell используйте `Invoke-RestMethod http://127.0.0.1:3000/api/v1/health/ready`.
+
+Остановка:
+
+```bash
+docker compose down          # контейнеры и сеть
+docker compose down -v       # также удалить volumes с данными
+```
+
+## Локальная разработка
+
+Поднимите только инфраструктуру. `docker-compose.dev.yml` публикует PostgreSQL и Redis **только на `127.0.0.1`**:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres redis
+```
+
+В `.env` укажите локальные адреса:
+
+```dotenv
+DATABASE_URL=postgresql://persephone:ВАШ_ПАРОЛЬ@127.0.0.1:5432/persephone
+REDIS_URL=redis://127.0.0.1:6379/0
+```
+
+Затем:
+
+```bash
+cd app
+npm ci
+npm run migrate
+npm run dev:api
+# в отдельном терминале:
+npm run dev:worker
+```
+
+Подробности и описание команд: [app/README.md](app/README.md).
+
+## Тесты и проверки
+
+```bash
+cd app
+npm run lint
+npm test
+```
+
+Интеграционные тесты миграций требуют отдельную базу, имя которой оканчивается на `_test`:
+
+```bash
+TEST_DATABASE_URL=postgresql://persephone:test@127.0.0.1:5432/persephone_test npm test
+```
+
+Unit-тесты внешних сервисов не требуют. CI выполняет линтер, unit- и интеграционные тесты, применяет миграции на чистой базе, проверяет схему, собирает Docker-образ и валидирует Compose.
+
+## Безопасность
+
+- PostgreSQL и Redis не публикуют порты на хост в базовой конфигурации.
+- Navidrome и Lidarr доступны только на `127.0.0.1`.
+- Секреты передаются только через переменные окружения; `.env` исключён из Git.
+- Обязательные переменные валидируются при старте.
+- Last.fm session keys шифруются AES-256-GCM с версией ключа.
+- Логи редактируют пароли, токены, cookie и ключи.
+
+Требования и ограничения: [docs/SECURITY.md](docs/SECURITY.md).
 
 ## Процесс разработки
 
@@ -148,7 +227,7 @@ docker compose up -d
 
 ## Дорожная карта
 
-Текущий этап — Stage 0. Полный план: [ROADMAP.md](ROADMAP.md).
+Stage 0 реализован и ожидает слияния. Следующий этап — Stage 1: Users & Library. Полный план: [ROADMAP.md](ROADMAP.md).
 
 ## Лицензия
 

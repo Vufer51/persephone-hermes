@@ -1,7 +1,7 @@
 # Roadmap
 
 **Проект:** Persephone Music
-**Текущий этап:** Stage 0 — Infrastructure MVP (в работе)
+**Текущий этап:** Stage 0 — Infrastructure MVP реализован, ожидает PR/CI; следующий — Stage 1
 **Связанные документы:** [PROJECT_SPEC.md](PROJECT_SPEC.md), [TASKS.md](TASKS.md), [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md)
 
 Этапы выполняются последовательно. Переход к следующему этапу возможен только после выполнения критических проверок текущего.
@@ -13,12 +13,12 @@
 - [x] Спецификация и правила разработки
 - [x] Структура репозитория и документация
 - [x] Labels, Milestones, Issues
-- [ ] Docker Compose: PostgreSQL, Redis, Navidrome, Lidarr, API, Worker
-- [ ] Каркас API и Worker, health checks
-- [ ] Система миграций и начальная схема БД
-- [ ] Конфигурация окружения и секреты
-- [ ] CI и проверки качества
-- [ ] Проверенный запуск с нуля
+- [x] Docker Compose: PostgreSQL, Redis, Navidrome, Lidarr, API, Worker
+- [x] Каркас API и Worker, health checks
+- [x] Система миграций и начальная схема БД
+- [x] Конфигурация окружения и секреты
+- [x] CI и проверки качества
+- [x] Проверенный запуск с нуля
 
 **Результат:** проект запускается, API и Worker подключаются к инфраструктуре, схема БД соответствует документации.
 

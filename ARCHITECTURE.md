@@ -1,8 +1,10 @@
 # Architecture
 
 **Проект:** Persephone Music
-**Статус документа:** актуально для Stage 0
+**Статус документа:** актуально для Stage 0; инфраструктурный каркас реализован
 **Связанные документы:** [PROJECT_SPEC.md](PROJECT_SPEC.md), [docs/DATA_MODEL.md](docs/DATA_MODEL.md), [docs/adr/](docs/adr/)
+
+Реализовано в Stage 0: API и Worker как отдельные процессы, PostgreSQL и Redis внутри Docker-сети, миграции, health checks, очереди BullMQ без зарегистрированных процессоров. Модули и адаптеры интеграций появятся на следующих этапах.
 
 ---
 

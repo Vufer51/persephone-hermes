@@ -11,25 +11,27 @@
 | # | Задача | Статус | Зависимости |
 |---|---|---|---|
 | [#1](https://github.com/DrRocksoDevelopment/persephone/issues/1) | Bootstrap: документация, структура, GitFlow | Done | — |
-| [#6](https://github.com/DrRocksoDevelopment/persephone/issues/6) | Секреты и конфигурация окружения | Ready | #1 |
-| [#4](https://github.com/DrRocksoDevelopment/persephone/issues/4) | Миграции и начальная схема БД | Ready | #1 |
-| [#3](https://github.com/DrRocksoDevelopment/persephone/issues/3) | API и Worker с health checks | Ready | #1, #6 |
-| [#2](https://github.com/DrRocksoDevelopment/persephone/issues/2) | Docker Compose stack | Ready | #1, #3, #4 |
-| [#5](https://github.com/DrRocksoDevelopment/persephone/issues/5) | CI и проверки качества | Ready | #3, #4 |
+| [#6](https://github.com/DrRocksoDevelopment/persephone/issues/6) | Секреты и конфигурация окружения | Review | #1 |
+| [#4](https://github.com/DrRocksoDevelopment/persephone/issues/4) | Миграции и начальная схема БД | Review | #1 |
+| [#3](https://github.com/DrRocksoDevelopment/persephone/issues/3) | API и Worker с health checks | Review | #1, #6 |
+| [#2](https://github.com/DrRocksoDevelopment/persephone/issues/2) | Docker Compose stack | Review | #1, #3, #4 |
+| [#5](https://github.com/DrRocksoDevelopment/persephone/issues/5) | CI и проверки качества | Review | #3, #4 |
 
 **Рекомендуемый порядок:** #6 → #4 → #3 → #2 → #5.
 
+Задачи #2–#6 реализованы в ветке `feature/stage-0-infrastructure` и ожидают Pull Request, CI и review.
+
 ## Definition of Done для Stage 0
 
-- [ ] `docker compose up -d` поднимает PostgreSQL, Redis, Navidrome, Lidarr, API, Worker.
-- [ ] API отвечает на `live` и `ready` health checks.
-- [ ] Worker подключается к БД и Redis и корректно завершается.
-- [ ] Миграции применяются на пустой базе одной командой.
-- [ ] Схема БД соответствует `docs/DATA_MODEL.md`.
-- [ ] В репозитории нет секретов.
+- [x] `docker compose up -d` поднимает PostgreSQL, Redis, Navidrome, Lidarr, API, Worker.
+- [x] API отвечает на `live` и `ready` health checks.
+- [x] Worker подключается к БД и Redis и корректно завершается.
+- [x] Миграции применяются на пустой базе одной командой.
+- [x] Схема БД соответствует `docs/DATA_MODEL.md`.
+- [x] В репозитории нет секретов.
 - [ ] CI зелёный на `develop`.
-- [ ] README содержит проверенные команды запуска.
-- [ ] `DEVELOPMENT_STATUS.md` обновлён.
+- [x] README содержит проверенные команды запуска.
+- [x] `DEVELOPMENT_STATUS.md` обновлён.
 
 ## Backlog (после Stage 0)
 

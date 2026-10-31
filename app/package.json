@@ -1,0 +1,38 @@
+{
+  "name": "persephone-music",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Persephone Music — API и Worker",
+  "type": "module",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "start:api": "node --env-file-if-exists=../.env src/api/server.js",
+    "start:worker": "node --env-file-if-exists=../.env src/workers/worker.js",
+    "dev:api": "node --env-file-if-exists=../.env --watch src/api/server.js",
+    "dev:worker": "node --env-file-if-exists=../.env --watch src/workers/worker.js",
+    "migrate": "node --env-file-if-exists=../.env src/db/migrate-cli.js up",
+    "migrate:status": "node --env-file-if-exists=../.env src/db/migrate-cli.js status",
+    "verify:schema": "node --env-file-if-exists=../.env src/db/verify-schema-cli.js",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "bullmq": "^6.5.3",
+    "fastify": "^5.12.7",
+    "ioredis": "^6.0.0",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "globals": "^17.13.0",
+    "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  }
+}

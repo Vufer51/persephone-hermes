@@ -2,7 +2,7 @@
 
 **Проект:** Persephone Music
 **Обновлено:** 2026-10-31
-**Текущий этап:** Stage 0 — Infrastructure MVP (инициализация)
+**Текущий этап:** Stage 0 — Infrastructure MVP (реализован, ожидает PR/CI)
 
 Документ отражает **фактическое** состояние. Наличие файла или документа не означает, что функциональность реализована.
 
@@ -10,46 +10,63 @@
 
 | Область | Что сделано |
 |---|---|
-| Документация | `PROJECT_SPEC.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `AGENTS.md` |
-| Модель данных | Концептуальная модель в `docs/DATA_MODEL.md` (без SQL-миграций) |
-| Интеграции | Описание контрактов в `docs/INTEGRATIONS.md` (без кода) |
-| Безопасность | Требования в `docs/SECURITY.md` (без реализации) |
-| Движки | Проектные документы `RECOMMENDATION_ENGINE.md`, `PREFETCH_ENGINE.md` |
-| Архитектурные решения | ADR 0001–0005 |
+| Документация | `PROJECT_SPEC.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `AGENTS.md`, `docs/` |
+| Модель данных | Концептуальная модель и SQL-схема из 24 таблиц, ограничений, индексов и триггеров |
+| Конфигурация | Валидация обязательных переменных, запрет небезопасных значений, redacted-описание |
+| Секреты | AES-256-GCM с версией ключа и аутентификацией payload |
+| Миграции | Forward-only runner, `schema_migrations`, advisory lock, транзакция на миграцию, проверка SHA-256 |
+| Проверка схемы | CLI-проверка таблиц, расширений и индексов |
+| API | Fastify 5, `/api/v1/health/live`, `/api/v1/health/ready`, единый формат ошибок, request ID, security-заголовки, pino |
+| Worker | BullMQ Worker, отдельное соединение для heartbeat, healthcheck, graceful shutdown |
+| Docker | Multi-stage Dockerfile, Compose-стек из PostgreSQL, Redis, migrate, API, Worker, Navidrome, Lidarr |
+| Сеть Docker | PostgreSQL и Redis без публикации портов; Navidrome/Lidarr только на `127.0.0.1` |
+| Локальная разработка | `docker-compose.dev.yml` публикует PostgreSQL/Redis только на `127.0.0.1` |
+| CI | GitHub Actions: линтер, unit-тесты, миграции на чистой БД, схема, Docker build, Compose config |
+| Зависимости | Dependabot для npm, Docker и GitHub Actions |
 | Процесс | GitFlow, Issue/PR-шаблоны, Labels, Milestones, Issues #1–#6 |
-| Структура репозитория | Каталоги `app/`, `web/`, `scripts/`, `docs/` зарезервированы |
 
 ## Tested
 
+Проверки выполнены локально 2026-10-31.
+
 | Проверка | Результат |
 |---|---|
-| Внутренние ссылки документации | Проверены вручную |
-| Отсутствие секретов в репозитории | Проверено: `.env` отсутствует, в `.env.example` только заглушки |
-| Git-история и ветки | Проверены после первой публикации |
-| Код, миграции, CI | Не применимо: кода ещё нет |
+| `npm run lint` | Успешно, без замечаний |
+| `npm test` без внешней БД | 41 unit-тест пройден, 10 интеграционных пропущены |
+| `npm test` с `TEST_DATABASE_URL` | 51 тест пройден, включая 10 интеграционных |
+| `npm run migrate` на пустой базе | Применена миграция `0001_initial_schema.sql` |
+| Повторный `npm run migrate` | Новых миграций нет, повторного применения нет |
+| `npm run verify:schema` | Схема соответствует ожидаемой |
+| `npm audit` | 0 уязвимостей |
+| `docker compose config` | Базовая конфигурация и dev override валидны |
+| `docker compose build` | Production-образ собран |
+| Полный `docker compose up -d` | Все сервисы healthy; `migrate` завершился с кодом 0 |
+| `GET /api/v1/health/live` | `200`, `status: ok` |
+| `GET /api/v1/health/ready` | `200`, PostgreSQL и Redis `ok` |
+| Схема в контейнере | 25 таблиц, включая `schema_migrations` |
+| Worker heartbeat | Ключ `persephone:worker:heartbeat` обновляется, TTL уменьшается |
+| Graceful shutdown | API и Worker завершаются по `SIGTERM` без ошибок |
+| Healthcheck-инструменты | `wget`/`curl` присутствуют в образах Navidrome и Lidarr |
+| Отсутствие секретов | `.env` в `.gitignore`, в репозитории только заглушки |
 
 ## Partially implemented
 
-Нет.
+| Область | Что есть | Чего нет |
+|---|---|---|
+| Worker | Процесс, очередь и heartbeat | Зарегистрированные процессоры задач |
+| API | Health-маршруты и обработка ошибок | Аутентификация и бизнес-маршруты |
+| Схема БД | Таблицы Stage 0 | Запросы и репозитории |
+| CI | Workflow создан | Результат первого запуска на GitHub |
 
 ## Planned
 
 | Область | Задача |
 |---|---|
-| Docker Compose | [#2](https://github.com/DrRocksoDevelopment/persephone/issues/2) |
-| API и Worker | [#3](https://github.com/DrRocksoDevelopment/persephone/issues/3) |
-| Миграции и схема БД | [#4](https://github.com/DrRocksoDevelopment/persephone/issues/4) |
-| CI и проверки качества | [#5](https://github.com/DrRocksoDevelopment/persephone/issues/5) |
-| Секреты и конфигурация | [#6](https://github.com/DrRocksoDevelopment/persephone/issues/6) |
+| Stage 1 | Пользователи, сессии, storage roots, индексатор, MusicBrainz matching |
+| Branch protection | Включить после появления CI-проверок и подходящего тарифа GitHub |
 
 ## Not implemented
 
-Следующие компоненты отсутствуют полностью:
-
-- HTTP API и маршруты;
-- процесс Worker и очереди BullMQ;
-- Docker Compose и Dockerfile;
-- PostgreSQL-схема и миграции;
 - аутентификация, регистрация, сессии;
 - музыкальный каталог, индексатор, MusicBrainz matching;
 - воспроизведение, HTTP Range, playback sessions;
@@ -59,25 +76,21 @@
 - Prefetch Engine;
 - Web Player;
 - Subsonic API;
-- CI, тесты, линтер.
+- бизнес-логика API и процессоры Worker.
 
 ## Known limitations
 
-- Репозиторий не содержит запускаемого приложения.
-- `.env.example` описывает целевые переменные; приложение их пока не читает.
-- Схема БД существует только как документация.
-- Branch protection и обязательные CI-проверки не настроены: CI ещё нет, а защита приватных репозиториев зависит от тарифа GitHub.
-- GitHub Project [#6](https://github.com/orgs/DrRocksoDevelopment/projects/6) настроен: доска, поля Stage/Priority/Work Type/Component/Estimate, 6 Issues, Milestones.
-- Представления Table/Roadmap и встроенные Workflows создаются в UI: публичный API GitHub не управляет ими.
+- Stage 0 содержит только инфраструктуру: API отвечает лишь health-маршрутами.
+- `transcode_policy` в MVP допускает только `source` (Original First).
+- Branch protection для `main`/`develop` не настроена: GitHub возвращает `403` для приватного репозитория на текущем тарифе.
+- CI создан, но ещё не запускался на GitHub: результат будет известен после открытия Pull Request.
+- GitHub Project [#6](https://github.com/orgs/DrRocksoDevelopment/projects/6): представления Table/Roadmap и встроенные Workflows создаются в UI, публичный API GitHub ими не управляет.
+- Лицензия проекта не выбрана.
 
 ## Next step
 
-Выполнить [#2](https://github.com/DrRocksoDevelopment/persephone/issues/2)–[#6](https://github.com/DrRocksoDevelopment/persephone/issues/6) в порядке зависимостей:
-
-1. `#6` — конфигурация и секреты.
-2. `#4` — миграции и схема.
-3. `#3` — API и Worker.
-4. `#2` — Docker Compose.
-5. `#5` — CI.
-
-После этого обновить этот документ и закрыть Stage 0.
+1. Открыть Pull Request `feature/stage-0-infrastructure` → `develop`.
+2. Дождаться зелёного CI и провести review.
+3. Закрыть Issues [#2](https://github.com/DrRocksoDevelopment/persephone/issues/2)–[#6](https://github.com/DrRocksoDevelopment/persephone/issues/6) и перевести их в Done.
+4. Слить `develop` → `main`, подготовить релиз `0.1.0`.
+5. Спланировать Stage 1 (Users & Library) отдельными Issues.

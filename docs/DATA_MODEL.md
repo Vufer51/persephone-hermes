@@ -1,7 +1,7 @@
 # Data Model
 
 **Проект:** Persephone Music
-**Статус:** концептуальная модель; SQL-миграции появятся в [#4](https://github.com/DrRocksoDevelopment/persephone/issues/4)
+**Статус:** реализовано миграцией `0001_initial_schema.sql` (задача [#4](https://github.com/DrRocksoDevelopment/persephone/issues/4))
 **Связанные документы:** [ARCHITECTURE.md](../ARCHITECTURE.md), [ADR 0003](adr/0003-postgresql-as-source-of-truth.md), [ADR 0005](adr/0005-multi-storage-abstraction.md)
 
 ---
