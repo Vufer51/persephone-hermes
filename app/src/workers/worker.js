@@ -6,7 +6,9 @@ import { closeRedis, createRedisClient } from '../services/redis.js';
 import { createLoggerOptions } from '../utils/logger.js';
 import { createShutdownHandler } from '../utils/shutdown.js';
 import { startHeartbeat } from './heartbeat.js';
+import { createProcessorRegistry } from './processor-registry.js';
 import { createJobProcessor, QUEUE_NAME } from './processor-registry.js';
+import { createCryptoService } from '../modules/auth/crypto.js';
 
 let config;
 try {
@@ -19,6 +21,12 @@ try {
 const logger = pino(createLoggerOptions(config));
 const workerId = `${hostname()}:${process.pid}`;
 
+// Crypto service для расшифровки session_key
+const cryptoService = createCryptoService(config.secrets.encryptionKey, config.secrets.encryptionKeyVersion);
+
+// Processor Registry для фоновых задач (scrobble и др.)
+const processorRegistry = createProcessorRegistry({ pool: null, config, cryptoService });
+
 // BullMQ требует maxRetriesPerRequest: null и не должен обрывать блокирующие команды.
 const redis = createRedisClient(config.redis.url, {
   logger,
@@ -26,6 +34,7 @@ const redis = createRedisClient(config.redis.url, {
   commandTimeout: null,
 });
 
+// Заглушка для BullMQ worker (если понадобятся queue-based задачи в будущем)
 const worker = new Worker(QUEUE_NAME, createJobProcessor({}), {
   connection: redis,
   concurrency: 1,
@@ -61,9 +70,15 @@ worker
     logger.error({ err: error }, 'Worker не смог подключиться к Redis');
   });
 
+// Запускаем процессоры после готовности Redis
+processorRegistry.start().catch((err) => {
+  logger.error({ err }, 'Failed to start processors');
+});
+
 const shutdown = createShutdownHandler({
   logger,
   steps: [
+    () => processorRegistry.stop(),
     () => worker.close(),
     () => stopHeartbeat(),
     () => closeRedis(heartbeatRedis),
