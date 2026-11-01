@@ -232,6 +232,74 @@ export class PlaybackService {
     return result.rows[0] ?? null;
   }
 
+  /**
+   * Получает детальную информацию о текущем воспроизведении (Now Playing).
+   * @param {string} userId
+   * @returns {Promise<Object|null>} now playing info или null если нет активной сессии
+   */
+  async getNowPlaying(userId) {
+    const session = await this.getActiveSession(userId);
+    if (!session) {return null;}
+
+    // Получаем полную информацию о треке
+    const trackResult = await this.pool.query(
+      `SELECT
+         r.id AS recording_id, r.title AS recording_title, r.duration_ms AS recording_duration,
+         a.id AS artist_id, a.name AS artist_name, a.sort_name AS artist_sort_name,
+         rel.id AS release_id, rel.title AS release_title, rel.release_type, rel.release_date,
+         ma.id AS media_asset_id, ma.format, ma.bitrate_kbps, ma.sample_rate_hz, ma.channels,
+         ps.started_at, ps.start_position_ms, ps.end_position_ms, ps.listened_ms
+       FROM playback_sessions ps
+       JOIN recordings r ON ps.recording_id = r.id
+       JOIN artists a ON r.artist_id = a.id
+       LEFT JOIN releases rel ON r.id = ANY(
+         SELECT recording_id FROM release_tracks WHERE release_id = rel.id
+       )
+       LEFT JOIN media_assets ma ON ps.media_asset_id = ma.id
+       WHERE ps.id = $1`,
+      [session.id],
+    );
+
+    if (trackResult.rows.length === 0) {return null;}
+
+    const track = trackResult.rows[0];
+    const positionMs = session.end_position_ms ?? session.start_position_ms ?? 0;
+    const durationMs = track.recording_duration ?? 0;
+
+    return {
+      session: {
+        id: session.id,
+        started_at: session.started_at,
+        position_ms: positionMs,
+        listened_ms: session.listened_ms ?? 0,
+      },
+      recording: {
+        id: track.recording_id,
+        title: track.recording_title,
+        duration_ms: durationMs,
+      },
+      artist: {
+        id: track.artist_id,
+        name: track.artist_name,
+        sort_name: track.artist_sort_name,
+      },
+      release: track.release_id ? {
+        id: track.release_id,
+        title: track.release_title,
+        release_type: track.release_type,
+        release_date: track.release_date,
+      } : null,
+      media_asset: track.media_asset_id ? {
+        id: track.media_asset_id,
+        format: track.format,
+        bitrate_kbps: track.bitrate_kbps,
+        sample_rate_hz: track.sample_rate_hz,
+        channels: track.channels,
+      } : null,
+      progress: durationMs > 0 ? Math.min(100, Math.round((positionMs / durationMs) * 100)) : 0,
+    };
+  }
+
   // Private methods
 
   /**

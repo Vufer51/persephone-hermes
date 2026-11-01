@@ -270,4 +270,82 @@ describe('playback routes', () => {
       expect(response.json().session).toBeNull();
     });
   });
+
+  describe('GET /api/v1/playback/now-playing', () => {
+    it('должен возвращать 404 если нет активной сессии', async () => {
+      const app = createApp();
+      app.dependencies.redis.get.mockResolvedValue(JSON.stringify({
+        id: '55555555-5555-5555-5555-555555555555',
+        email: 'test@test.com',
+        username: 'testuser',
+        role: 'user',
+        sessionId: '33333333-3333-3333-3333-333333333333',
+      }));
+      app.dependencies.database.pool.query.mockResolvedValue({ rows: [] });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/playback/now-playing',
+        headers: makeAuth(validToken),
+      });
+
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error.code).toBe('not_found');
+    });
+
+    it('должен возвращать детальную информацию о текущем треке', async () => {
+      const app = createApp();
+      app.dependencies.redis.get.mockResolvedValue(JSON.stringify({
+        id: '55555555-5555-5555-5555-555555555555',
+        email: 'test@test.com',
+        username: 'testuser',
+        role: 'user',
+        sessionId: '33333333-3333-3333-3333-333333333333',
+      }));
+      app.dependencies.database.pool.query
+        .mockResolvedValueOnce({ rows: [{ // getActiveSession
+          id: '44444444-4444-4444-4444-444444444444',
+          user_id: '55555555-5555-5555-5555-555555555555',
+          recording_id: '11111111-1111-1111-1111-111111111111',
+          media_asset_id: '22222222-2222-2222-2222-222222222222',
+          started_at: '2024-01-01T00:00:00Z',
+          start_position_ms: 0,
+          end_position_ms: 50000,
+          listened_ms: 50000,
+        }] });
+      app.dependencies.database.pool.query
+        .mockResolvedValueOnce({ rows: [{ // getNowPlaying JOIN
+          recording_id: '11111111-1111-1111-1111-111111111111',
+          recording_title: 'Test Song',
+          recording_duration: 200000,
+          artist_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          artist_name: 'Test Artist',
+          artist_sort_name: 'Artist, Test',
+          release_id: 'rrrrrrrr-rrrr-rrrr-rrrr-rrrrrrrrrrrr',
+          release_title: 'Test Album',
+          release_type: 'album',
+          release_date: '2024-01-01',
+          media_asset_id: '22222222-2222-2222-2222-222222222222',
+          format: 'mp3',
+          bitrate_kbps: 320,
+          sample_rate_hz: 44100,
+          channels: 2,
+        }] });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/playback/now-playing',
+        headers: makeAuth(validToken),
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.now_playing).toBeDefined();
+      expect(body.now_playing.recording.title).toBe('Test Song');
+      expect(body.now_playing.artist.name).toBe('Test Artist');
+      expect(body.now_playing.release.title).toBe('Test Album');
+      expect(body.now_playing.media_asset.format).toBe('mp3');
+      expect(body.now_playing.progress).toBe(25); // 50000/200000 = 25%
+    });
+  });
 });

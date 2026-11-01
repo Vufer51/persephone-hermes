@@ -194,4 +194,21 @@ export function registerRoutes(app) {
       return { session };
     },
   });
+
+  // GET /api/v1/playback/now-playing — текущий трек (Now Playing)
+  app.get('/api/v1/playback/now-playing', {
+    preHandler: [app.authMiddleware],
+    handler: async (request, reply) => {
+      const userId = request.user.id;
+      const nowPlaying = await playbackService.getNowPlaying(userId);
+
+      if (!nowPlaying) {
+        return reply.code(404).send({
+          error: { code: 'not_found', message: 'No active playback', requestId: request.id },
+        });
+      }
+
+      return { now_playing: nowPlaying };
+    },
+  });
 }
