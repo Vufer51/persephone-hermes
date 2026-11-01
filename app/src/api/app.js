@@ -5,6 +5,7 @@ import { registerHealthRoutes } from './routes/health.js';
 import { createAuthMiddleware } from '../modules/auth/auth.js';
 import { registerRoutes as registerRegistrationRoutes } from '../modules/auth/registration.js';
 import { registerRoutes as registerLoginRoutes } from '../modules/auth/login.js';
+import { registerRoutes as registerStorageRootRoutes } from '../modules/storage/storage-root.js';
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
 
@@ -70,6 +71,9 @@ export function buildApp({ config, database, redis, logger }) {
   // Регистрация маршрутов аутентификации
   registerRegistrationRoutes(app);
   registerLoginRoutes(app);
+
+  // Регистрация маршрутов управления хранилищами
+  registerStorageRootRoutes(app);
 
   return app;
 }
