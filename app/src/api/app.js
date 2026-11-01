@@ -2,6 +2,9 @@ import { randomUUID } from 'node:crypto';
 import Fastify from 'fastify';
 import { createLoggerOptions } from '../utils/logger.js';
 import { registerHealthRoutes } from './routes/health.js';
+import { createAuthMiddleware } from '../modules/auth/auth.js';
+import { registerRoutes as registerRegistrationRoutes } from '../modules/auth/registration.js';
+import { registerRoutes as registerLoginRoutes } from '../modules/auth/login.js';
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
 
@@ -24,6 +27,7 @@ export function buildApp({ config, database, redis, logger }) {
 
   app.decorate('config', config);
   app.decorate('dependencies', { database, redis });
+  app.decorate('authMiddleware', createAuthMiddleware(database.pool, redis));
 
   app.addHook('onSend', async (request, reply, payload) => {
     reply.header('x-request-id', request.id);
@@ -62,6 +66,10 @@ export function buildApp({ config, database, redis, logger }) {
   });
 
   registerHealthRoutes(app, { database, redis });
+
+  // Регистрация маршрутов аутентификации
+  registerRegistrationRoutes(app);
+  registerLoginRoutes(app);
 
   return app;
 }
