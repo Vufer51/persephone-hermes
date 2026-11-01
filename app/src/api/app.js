@@ -9,6 +9,7 @@ import { registerRoutes as registerStorageRootRoutes } from '../modules/storage/
 import { registerRoutes as registerIndexRoutes } from '../modules/library/media-indexer.js';
 import { registerRoutes as registerLibraryRoutes } from '../modules/library/library-search.js';
 import { registerRoutes as registerPlaybackRoutes } from '../modules/playback/playback.js';
+import { registerRoutes as registerLastFmRoutes } from '../modules/lastfm/lastfm.js';
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
 
@@ -86,6 +87,9 @@ export function buildApp({ config, database, redis, logger }) {
 
   // Регистрация маршрутов воспроизведения
   registerPlaybackRoutes(app);
+
+  // Регистрация маршрутов Last.fm
+  registerLastFmRoutes(app);
 
   return app;
 }
