@@ -8,6 +8,7 @@ import { registerRoutes as registerLoginRoutes } from '../modules/auth/login.js'
 import { registerRoutes as registerStorageRootRoutes } from '../modules/storage/storage-root.js';
 import { registerRoutes as registerIndexRoutes } from '../modules/library/media-indexer.js';
 import { registerRoutes as registerLibraryRoutes } from '../modules/library/library-search.js';
+import { registerRoutes as registerPlaybackRoutes } from '../modules/playback/playback.js';
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
 
@@ -82,6 +83,9 @@ export function buildApp({ config, database, redis, logger }) {
 
   // Регистрация маршрутов поиска и просмотра библиотеки
   registerLibraryRoutes(app);
+
+  // Регистрация маршрутов воспроизведения
+  registerPlaybackRoutes(app);
 
   return app;
 }
