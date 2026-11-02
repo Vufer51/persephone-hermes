@@ -66,7 +66,22 @@ Lidarr — это менеджер музыкальной коллекции, а
 ## Связанные компоненты
 
 - `docker-compose.yml` — сервисы `qbittorrent`, `prowlarr`, связанные с `lidarr` через общий volume `/downloads`
-- Переменные окружения: `QBITTORRENT_URL`, `QBITTORRENT_USERNAME`, `QBITTORRENT_PASSWORD`, `PROWLLARR_URL`, `PROWLLARR_API_KEY`
+- `scripts/setup-arr-stack.js` — скрипт автоматической настройки Arr-стека через REST API
+- Переменные окружения: `QBITTORRENT_URL`, `QBITTORRENT_USERNAME`, `QBITTORRENT_PASSWORD`, `PROWLLARR_URL`, `PROWLLARR_API_KEY`, `LIDARR_URL`, `LIDARR_API_KEY` (в `.env.example`)
+
+## Как запустить настройку
+
+После `docker compose up -d` выполните:
+
+```bash
+cd app
+PROWLLARR_API_KEY=<ключ_из_профиля_prowlarr> \
+LIDARR_API_KEY=<ключ_из_профиля_lidarr> \
+node scripts/setup-arr-stack.js
+```
+
+API-ключи получаются в Web UI каждого приложения: **Settings → General → API Key**.
+
 - Lidarr уже настроен с `LIDARR_URL` и `LIDARR_API_KEY` в `app-environment`
 
 ## Статус
