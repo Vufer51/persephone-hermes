@@ -12,7 +12,7 @@ const mockLastFmClient = {
 };
 
 // Mock the lastfm-client module
-vi.mock('../../src/integrations/lastfm-client.js', () => ({
+vi.mock('../src/integrations/lastfm-client.js', () => ({
   createLastFmClient: vi.fn(() => mockLastFmClient),
 }));
 
@@ -21,7 +21,30 @@ const apps = [];
 
 function createApp(_overrides = {}) {
   const mockPool = {
-    query: vi.fn(async () => ({ rows: [] })),
+    query: vi.fn(async (sql) => {
+      if (sql.includes('user_sessions')) {
+        return {
+          rows: [{
+            session_id: 's1',
+            user_id: 'u1',
+            email: 'test@test.com',
+            username: 'testuser',
+            role: 'user',
+            user_status: 'active',
+            expires_at: new Date(Date.now() + 86400000).toISOString(),
+          }],
+        };
+      }
+      if (sql.includes('user_lastfm')) {
+        return {
+          rows: [{
+            session_key_encrypted: 'AeSmqyIE7A4vZGAIYUl/FGVPYCrvW74NoR/5im4dzhprMA+avf8KACAQsT7l',
+            encryption_key_version: 1,
+          }],
+        };
+      }
+      return { rows: [] };
+    }),
   };
   const mockDatabase = { pool: mockPool, ping: vi.fn(async () => {}) };
   const mockRedis = { ping: vi.fn(async () => {}), setex: vi.fn(), del: vi.fn(), get: vi.fn() };
@@ -34,7 +57,7 @@ function createApp(_overrides = {}) {
       music: { rootContainer: '/music', storageRootName: 'test', storageRootIdentifier: 'test' },
       integrations: {
         navidrome: { url: 'http://navidrome:4533', user: 'admin', password: 'password' },
-        lidarr: {}, musicbrainz: {}, lastfm: { apiKey: 'test_key', sharedSecret: 'test_secret', baseUrl: 'https://ws.audioscrobbler.com/2.0/' },
+        lastfm: { apiKey: 'test_key', sharedSecret: 'test_secret', baseUrl: 'https://ws.audioscrobbler.com/2.0/' },
       },
       auth: { sessionTtlDays: 7 },
       secrets: {
@@ -52,7 +75,6 @@ function createApp(_overrides = {}) {
 
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((app) => app.close()));
-  vi.restoreAllMocks();
   Object.values(mockLastFmClient).forEach((fn) => fn.mockReset());
 });
 
@@ -220,16 +242,6 @@ describe('Last.fm integration routes', () => {
 
     it('должен обновлять Now Playing в Last.fm', async () => {
       const app = createApp();
-      app.dependencies.redis.get.mockResolvedValue(JSON.stringify({
-        id: '55555555-5555-5555-5555-555555555555',
-        email: 'test@test.com',
-        username: 'testuser',
-        role: 'user',
-        sessionId: '33333333-3333-3333-3333-333333333333',
-      }));
-      app.dependencies.database.pool.query
-        .mockResolvedValueOnce({ rows: [{ session_key_encrypted: 'encrypted_key', encryption_key_version: 1 }] })
-        .mockResolvedValueOnce({ rows: [] });
 
       const response = await app.inject({
         method: 'POST',
@@ -259,16 +271,6 @@ describe('Last.fm integration routes', () => {
 
     it('должен запускать синхронизацию и возвращать результаты', async () => {
       const app = createApp();
-      app.dependencies.redis.get.mockResolvedValue(JSON.stringify({
-        id: '55555555-5555-5555-5555-555555555555',
-        email: 'test@test.com',
-        username: 'testuser',
-        role: 'user',
-        sessionId: '33333333-3333-3333-3333-333333333333',
-      }));
-      app.dependencies.database.pool.query
-        .mockResolvedValueOnce({ rows: [{ session_key_encrypted: 'encrypted_key', encryption_key_version: 1 }] })
-        .mockResolvedValueOnce({ rows: [] });
 
       const response = await app.inject({
         method: 'POST',

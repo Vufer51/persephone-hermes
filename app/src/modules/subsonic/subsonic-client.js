@@ -248,15 +248,15 @@ export class SubsonicClient {
    */
   async playQueue(userId) {
     const result = await this.pool.query(
-      `SELECT pq.id, pq.position, pq.media_asset_id,
-              r.title AS recording_title, r.duration_ms,
+      `SELECT pqi.id, pqi.position, r.title AS recording_title, r.duration_ms,
               a.name AS artist_name
-       FROM play_queue pq
-       LEFT JOIN media_assets ma ON pq.media_asset_id = ma.id
-       LEFT JOIN recordings r ON ma.recording_id = r.id
-       LEFT JOIN artists a ON r.artist_id = a.id
+       FROM playback_queues pq
+       JOIN playback_queue_items pqi ON pqi.queue_id = pq.id
+       JOIN recordings r ON pqi.recording_id = r.id
+       JOIN artists a ON r.artist_id = a.id
        WHERE pq.user_id = $1
-       ORDER BY pq.position`,
+         AND pq.name = 'default'
+       ORDER BY pqi.position`,
       [userId],
     );
 

@@ -1,6 +1,6 @@
 # app — backend Persephone Music
 
-**Статус:** Stage 0 — Infrastructure MVP. Реализованы каркас API, Worker, миграции и тесты; бизнес-логика появится на следующих этапах.
+**Статус:** Stage 8 — CI/CD Pipeline. Все этапы Roadmap (0–8) реализованы.
 
 Backend — модульный монолит на Node.js 22 LTS (JavaScript, ESM). API и Worker используют общий код, но запускаются отдельными процессами.
 
@@ -18,8 +18,18 @@ app/
     │   ├── routes/          # health-маршруты
     │   ├── app.js           # сборка Fastify
     │   └── server.js        # запуск API
-    ├── modules/             # бизнес-модули (следующие этапы)
-    ├── integrations/        # адаптеры внешних сервисов (следующие этапы)
+    ├── modules/
+    │   ├── auth/            # аутентификация (регистрация, логин, сессии)
+    │   ├── library/         # поиск и просмотр библиотеки
+    │   ├── playback/        # воспроизведение (Navidrome, сессии, стрим)
+    │   ├── lastfm/          # Last.fm интеграция
+    │   ├── users/           # пользовательские данные (лайки, пропуски)
+    │   ├── playlists/       # плейлисты
+    │   ├── recommendations/ # Recommendation Engine
+    │   ├── prefetch/        # Prefetch Engine
+    │   ├── player/          # Web Player API
+    │   └── subsonic/        # Subsonic API совместимость
+    ├── integrations/        # адаптеры внешних сервисов (Last.fm, Navidrome)
     ├── workers/
     │   ├── worker.js        # процесс BullMQ
     │   ├── heartbeat.js     # ключ готовности в Redis
@@ -27,13 +37,12 @@ app/
     │   └── processor-registry.js
     ├── db/
     │   ├── migrations/      # forward-only SQL-миграции
-    │   ├── queries/         # SQL-запросы (следующие этапы)
+    │   ├── queries/         # SQL-запросы
     │   ├── migrate.js
     │   ├── migrate-cli.js
     │   ├── verify-schema.js
     │   ├── verify-schema-cli.js
     │   └── pool.js
-    ├── services/
     ├── config/
     └── utils/
 ```
@@ -100,12 +109,40 @@ openssl rand -base64 32   # SECRET_ENCRYPTION_KEY (ровно 32 байта)
 
 Worker публикует ключ `persephone:worker:heartbeat` в Redis с TTL 30 секунд. `src/workers/healthcheck.js` проверяет его наличие и используется Docker healthcheck.
 
+## Web Player API
+
+| Endpoint | Метод | Описание |
+|---|---|---|
+| `/api/v1/player/stream/:mediaAssetId` | GET | URL стрима для HTML5 аудио плеера |
+| `/api/v1/player/now-playing` | GET | Текущий трек (Now Playing) |
+| `/api/v1/player/history` | GET | История воспроизведения |
+| `/api/v1/player/assets` | GET | Список доступных медиа-ассетов |
+
+Все маршруты требуют аутентификации (заголовок `Authorization: Bearer <token>`).
+
+## Subsonic API
+
+| Endpoint | Метод | Описание |
+|---|---|---|
+| `/rest/ping` | GET | Проверка соединения |
+| `/rest/getLicenses` | GET | Информация о лицензии |
+| `/rest/getMusicFolders` | GET | Папки с музыкой |
+| `/rest/search3` | GET | Поиск треков/артистов/альбомов |
+| `/rest/getAlbumList` | GET | Список альбомов |
+| `/rest/getArtist` | GET | Информация об исполнителе |
+| `/rest/playQueue` | GET | Очередь воспроизведения |
+| `/rest/getStreamUrl` | GET | URL стрима медиа-ассета |
+| `/rest/getCoverArt` | GET | Обложка альбома |
+| `/rest/scrobble` | GET | Отправка скроббла |
+
+Аутентификация через параметры `u` (username) и `t` (token) или `p` (пароль).
+
 ## Тесты
 
 Unit-тесты не требуют внешних сервисов. Интеграционные тесты миграций включаются только при заданном `TEST_DATABASE_URL`, имя базы должно оканчиваться на `_test`:
 
 ```bash
-TEST_DATABASE_URL=postgresql://persephone:test@127.0.0.1:55432/persephone_test npm test
+TEST_DATABASE_URL=postgresql://persephone:***@127.0.0.1:55432/persephone_test npm test
 ```
 
 Тесты сами удаляют схему `public`, применяют миграции и проверяют ограничения. **Не указывайте в `TEST_DATABASE_URL` рабочую базу.**
@@ -149,3 +186,4 @@ TEST_DATABASE_URL=postgresql://persephone:test@127.0.0.1:55432/persephone_test n
 - [docs/DATA_MODEL.md](../docs/DATA_MODEL.md)
 - [docs/INTEGRATIONS.md](../docs/INTEGRATIONS.md)
 - [docs/SECURITY.md](../docs/SECURITY.md)
+- [docs/adr/0005-web-player-subsonic.md](../docs/adr/0005-web-player-subsonic.md) — ADR для Web Player и Subsonic

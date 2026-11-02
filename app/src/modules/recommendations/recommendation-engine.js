@@ -285,3 +285,74 @@ export class RecommendationEngine {
 export function createRecommendationEngine({ pool, config, userPreferences }) {
   return new RecommendationEngine({ pool, config, userPreferences });
 }
+
+/**
+ * Регистрирует маршруты рекомендаций.
+ * @param {import('fastify').FastifyInstance} app
+ */
+export function registerRoutes(app) {
+  const { database } = app.dependencies;
+  const engine = createRecommendationEngine({ pool: database.pool, config: app.config });
+
+  // GET /api/v1/recommendations/candidates — кандидаты для пользователя
+  app.get('/api/v1/recommendations/candidates', {
+    preHandler: [app.authMiddleware],
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+          diversity: { type: 'number', minimum: 0, maximum: 1, default: 0.5 },
+        },
+      },
+    },
+    handler: async (request) => {
+      const userId = request.user.id;
+      const { limit = 20, diversity = 0.5 } = request.query;
+      return engine.generateCandidates(userId, { limit, diversity });
+    },
+  });
+
+  // GET /api/v1/recommendations/radio/:seedRecordingId — радио из трека
+  app.get('/api/v1/recommendations/radio/:seedRecordingId', {
+    preHandler: [app.authMiddleware],
+    schema: {
+      params: {
+        type: 'object',
+        required: ['seedRecordingId'],
+        properties: { seedRecordingId: { type: 'string', format: 'uuid' } },
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: 15 },
+          diversity: { type: 'number', minimum: 0, maximum: 1, default: 0.3 },
+        },
+      },
+    },
+    handler: async (request) => {
+      const { seedRecordingId } = request.params;
+      const { limit = 15, diversity = 0.3 } = request.query;
+      return engine.getRadio(seedRecordingId, { limit, diversity });
+    },
+  });
+
+  // GET /api/v1/recommendations/explanations — объяснения для кандидатов
+  app.post('/api/v1/recommendations/explanations', {
+    preHandler: [app.authMiddleware],
+    schema: {
+      body: {
+        type: 'object',
+        required: ['candidates'],
+        properties: {
+          candidates: { type: 'array' },
+        },
+      },
+    },
+    handler: async (request) => {
+      const userId = request.user.id;
+      const { candidates } = request.body;
+      return engine.getExplanations(userId, candidates);
+    },
+  });
+}

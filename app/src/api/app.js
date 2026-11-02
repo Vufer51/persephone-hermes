@@ -10,7 +10,6 @@ import { registerRoutes as registerIndexRoutes } from '../modules/library/media-
 import { registerRoutes as registerLibraryRoutes } from '../modules/library/library-search.js';
 import { registerRoutes as registerPlaybackRoutes } from '../modules/playback/playback.js';
 import { registerRoutes as registerLastFmRoutes } from '../modules/lastfm/lastfm.js';
-import { registerRoutes as registerUsersRoutes } from '../modules/users/users.js';
 import { registerRoutes as registerRecommendationRoutes } from '../modules/recommendations/recommendation-engine.js';
 import { registerRoutes as registerPrefetchRoutes } from '../modules/prefetch/prefetch.js';
 import { registerRoutes as registerPlayerRoutes } from '../modules/player/player.js';
@@ -96,10 +95,7 @@ export function buildApp({ config, database, redis, logger }) {
   // Регистрация маршрутов Last.fm
   registerLastFmRoutes(app);
 
-  // Регистрация маршрутов плейлистов
-
   // Регистрация маршрутов пользовательских данных
-  registerUsersRoutes(app);
 
   // Регистрация маршрутов рекомендаций
   registerRecommendationRoutes(app);
