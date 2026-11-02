@@ -1,0 +1,76 @@
+name: Feature Request
+description: Propose a new feature for Persephone Music
+labels: [type: feature]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for Persephone Music? Let us know!
+
+  - type: input
+    id: title
+    attributes:
+      label: Feature title
+      description: Short and descriptive title
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why is this feature needed? What problem does it solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: What should the feature do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How will we know the feature is complete?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - auth
+        - library
+        - playback
+        - lastfm
+        - recommendations
+        - prefetch
+        - player
+        - subsonic
+        - api
+        - database
+        - worker
+        - web-ui
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 - Critical
+        - P1 - High
+        - P2 - Normal
+        - P3 - Low
+      default: "P2 - Normal"
+    validations:
+      required: true
