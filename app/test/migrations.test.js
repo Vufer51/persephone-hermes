@@ -15,10 +15,13 @@ describe('listMigrations', () => {
   it('читает миграции в детерминированном порядке и считает checksum', async () => {
     const migrations = await listMigrations();
 
-    expect(migrations.map((migration) => migration.filename)).toEqual(['0001_initial_schema.sql']);
+    expect(migrations.map((migration) => migration.filename)).toEqual(['0001_initial_schema.sql', '0002_download_requests.sql']);
     expect(migrations[0].version).toBe('0001');
     expect(migrations[0].checksum).toMatch(/^[0-9a-f]{64}$/);
     expect(migrations[0].sql).toContain('CREATE TABLE users');
+    expect(migrations[1].version).toBe('0002');
+    expect(migrations[1].checksum).toMatch(/^[0-9a-f]{64}$/);
+    expect(migrations[1].sql).toContain('CREATE TABLE download_requests');
   });
 });
 
@@ -63,7 +66,7 @@ describe.skipIf(!enabled)('migrations against PostgreSQL', () => {
     const result = await runMigrations({ pool });
 
     expect(result.applied).toEqual([]);
-    expect(result.skipped).toEqual(['0001_initial_schema.sql']);
+    expect(result.skipped).toEqual(['0001_initial_schema.sql', '0002_download_requests.sql']);
   });
 
   it('status показывает применённую миграцию', async () => {
