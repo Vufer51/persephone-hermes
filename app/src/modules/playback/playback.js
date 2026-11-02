@@ -1,4 +1,5 @@
 import { createPlaybackService } from './playback-service.js';
+import { createLidarrService } from '../lidarr/lidarr-service.js';
 
 /**
  * Регистрирует маршруты воспроизведения.
@@ -6,15 +7,17 @@ import { createPlaybackService } from './playback-service.js';
  */
 export function registerRoutes(app) {
   const { database } = app.dependencies;
+  const { pool } = database;
   const { config } = app;
-  const playbackService = createPlaybackService({ pool: database.pool, config });
+  const lidarrService = createLidarrService({ pool, config });
+  const playbackService = createPlaybackService({ pool, config, lidarrService });
 
   // POST /api/v1/playback/sessions — старт сессии
   app.post('/api/v1/playback/sessions', {
     schema: {
       body: {
         type: 'object',
-        required: ['recordingId', 'mediaAssetId'],
+        required: ['recordingId'],
         properties: {
           recordingId: { type: 'string', format: 'uuid' },
           mediaAssetId: { type: 'string', format: 'uuid' },
@@ -36,6 +39,20 @@ export function registerRoutes(app) {
           startPositionMs,
           source,
         });
+
+        // Если нет mediaAssetId — трек скачивается через Lidarr, возвращаем статус
+        if (!mediaAssetId) {
+          const downloadStatus = await lidarrService.getDownloadStatus(userId, recordingId);
+          return {
+            session,
+            download_status: downloadStatus.status,
+            download_request_id: downloadStatus.requestId,
+            message: downloadStatus.status === 'downloading'
+              ? 'Трек скачивается. Подождите несколько минут.'
+              : 'Трек будет скачан автоматически.',
+          };
+        }
+
         return { session };
       } catch (err) {
         request.log.error(err);

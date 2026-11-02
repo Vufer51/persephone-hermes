@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createNavidromeClient } from './navidrome-client.js';
 
+
 /**
  * Сервис воспроизведения: управление сессиями, прокси стрима, история.
  */
@@ -11,10 +12,11 @@ export class PlaybackService {
    * @param {Object} deps.config
    * @param {NavidromeClient} [deps.navidromeClient]
    */
-  constructor({ pool, config, navidromeClient = null }) {
+  constructor({ pool, config, navidromeClient = null, lidarrService = null }) {
     this.pool = pool;
     this.config = config;
     this.navidromeClient = navidromeClient ?? createNavidromeClient(config);
+    this.lidarrService = lidarrService;
   }
 
   /**
@@ -30,6 +32,28 @@ export class PlaybackService {
   async startSession({ userId, recordingId, mediaAssetId, startPositionMs = 0, source = 'api' }) {
     const sessionId = randomUUID();
     const startedAt = new Date().toISOString();
+
+    // Если нет mediaAssetId — трек не скачано локально, авто-инициируем скачивание через Lidarr
+    if (!mediaAssetId && this.lidarrService) {
+      const recordingResult = await this.pool.query(
+        `SELECT r.title, r.musicbrainz_recording_id, a.name AS artist_name
+         FROM recordings r
+         LEFT JOIN artists a ON r.artist_id = a.id
+         WHERE r.id = $1`,
+        [recordingId],
+      );
+      if (recordingResult.rows.length > 0) {
+        const row = recordingResult.rows[0];
+        await this.lidarrService.requestDownload({
+          userId,
+          recordingId,
+          artistName: row.artist_name,
+          artistMbId: row.musicbrainz_recording_id ?? null,
+          recordingTitle: row.title,
+        });
+      }
+      // Создаём сессию без media_asset_id — пользователь будет ждать пока файл появится
+    }
 
     await this.pool.query(
       `INSERT INTO playback_sessions (id, user_id, recording_id, media_asset_id, started_at, start_position_ms, source)

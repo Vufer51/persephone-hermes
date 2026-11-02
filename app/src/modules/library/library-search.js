@@ -6,6 +6,7 @@ import {
   listReleases,
   listRecordings,
 } from './library-search-service.js';
+import { createLidarrService } from '../lidarr/lidarr-service.js';
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
@@ -18,6 +19,8 @@ const MAX_LIMIT = 100;
 export function registerRoutes(app) {
   const { database } = app.dependencies;
   const { pool } = database;
+  const { config } = app;
+  const lidarrService = createLidarrService({ pool: database.pool, config });
 
   // GET /api/v1/library/search
   app.get('/api/v1/library/search', {
@@ -34,7 +37,8 @@ export function registerRoutes(app) {
     },
     handler: async (request) => {
       const { q, limit, offset } = request.query;
-      const results = await searchLibrary(pool, q, limit, offset);
+      const userId = request.user?.id;
+      const results = await searchLibrary({ pool, q, limit, offset, lidarrService, userId });
 
       return {
         query: q,
@@ -124,7 +128,8 @@ export function registerRoutes(app) {
     },
     handler: async (request, reply) => {
       const { id } = request.params;
-      const result = await getRecording(pool, id);
+      const userId = request.user?.id;
+      const result = await getRecording({ pool, recordingId: id, lidarrService, userId });
 
       if (result.recording === null) {
         reply.code(404).send({
@@ -140,6 +145,8 @@ export function registerRoutes(app) {
       return {
         recording: result.recording,
         media_assets: result.media_assets,
+        available_locally: result.available_locally,
+        download_status: result.download_status,
       };
     },
   });
