@@ -206,6 +206,35 @@ services:
       retries: 5
       start_period: 30s
 
+  setup:
+    build:
+      context: ./app
+      target: production
+    image: persephone-app:local
+    command: ["node", "scripts/setup-project.js"]
+    environment:
+      <<: *app-environment
+      PROWLLARR_API_KEY: ${PROWLLARR_API_KEY:-}
+      LIDARR_API_KEY: ${LIDARR_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      lidarr:
+        condition: service_healthy
+      navidrome:
+        condition: service_healthy
+      prowlarr:
+        condition: service_healthy
+      qbittorrent:
+        condition: service_healthy
+    restart: "no"
+    volumes:
+      - ./data:/app/data:rw
+
 volumes:
   postgres-data:
   redis-data:

@@ -25,8 +25,6 @@
  *   PROWLLARR_API_KEY=xxx LIDARR_API_KEY=yyy node scripts/setup-arr-stack.js
  */
 
-import { createWriteStream } from 'node:fs';
-import { createServer } from 'node:http';
 
 // ============================================================================
 // Конфигурация
@@ -185,35 +183,6 @@ async function checkProwlarrApi() {
   console.log('\n=== Prowlarr: проверка API ===');
   await prowlarrRequest('/system/status');
   console.log('✓ Prowlarr API отвечает');
-}
-
-/**
- * Получает список доступных индексаторов Torznab.
- */
-async function getProwlarrIndexers() {
-  try {
-    const indexers = await prowlarrRequest('/indexer/torznab');
-    return indexers;
-  } catch (err) {
-    console.log(`  Не удалось получить список индексаторов Prowlarr: ${err.message}`);
-    return [];
-  }
-}
-
-/**
- * Добавляет индексатор в Prowlarr.
- */
-async function addProwlarrIndexer(indexer) {
-  try {
-    await prowlarrRequest('/indexer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(indexer),
-    });
-    console.log(`✓ Prowlarr: индексатор "${indexer.name}" добавлен`);
-  } catch (err) {
-    console.log(`  Пропуск индексатора "${indexer.name}": ${err.message}`);
-  }
 }
 
 // ============================================================================

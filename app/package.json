@@ -17,7 +17,8 @@
     "verify:schema": "node --env-file-if-exists=../.env src/db/verify-schema-cli.js",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "setup": "node --env-file-if-exists=../.env scripts/setup-project.js"
   },
   "dependencies": {
     "argon2": "^0.41.1",
