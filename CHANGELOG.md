@@ -16,7 +16,7 @@
 - GitHub Issue/PR-шаблоны, `dependabot.yml`, CI workflow.
 - Labels и Milestones для этапов проекта.
 - GitHub Project #6: доска, поля Status/Stage/Priority/Work Type/Component/Estimate, README проекта.
-- Issues #1–#20 для Stage 0–8, добавленные в Project с приоритетами и этапами.
+- Issues #1–#21 для Stage 0–10, добавленные в Project с приоритетами и этапами.
 - GitHub Discussions включены для вопросов и предложений.
 - Ветки `main` и `develop`.
 
@@ -98,6 +98,16 @@
 - GitHub Actions Release: создание GitHub Release на теги v*
 - Issue templates: bug report, feature request
 - Pull Request template
+
+#### Stage 10 — Lidarr авто-скачивание
+
+- Lidarr API клиент: поиск исполнителей, добавление в библиотеку с monitored: true
+- `download_requests` таблица: отслеживание статуса скачивания (pending, sending, downloading, completed, failed, cancelled)
+- Авто-запрос в Lidarr при поиске/воспроизведении недоступного трека
+- `qBittorrent` + `Prowlarr` сервисы в docker-compose с общим volumen `/downloads`
+- `scripts/setup-project.js`: единая точка настройки (`npm run setup`)
+- API: `GET/POST/GET/DELETE /api/v1/downloads/requests`, `GET /api/v1/downloads/status`
+- `available_locally` + `download_status` в ответах поиска и деталей записи
 
 ### Changed
 

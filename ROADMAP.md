@@ -1,7 +1,7 @@
 # Roadmap
 
 **Проект:** Persephone Music  
-**Текущий этап:** Stage 8 — CI/CD Pipeline (завершён, влит в develop)  
+**Текущий этап:** Stage 10 — Lidarr авто-скачивание (завершён, влит в develop)  
 **Связанные документы:** [PROJECT_SPEC.md](PROJECT_SPEC.md), [TASKS.md](TASKS.md), [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md)
 
 Этапы выполняются последовательно. Переход к следующему этапу возможен только после выполнения критических проверок текущего.
@@ -122,6 +122,20 @@ Issues: [#2](https://github.com/DrRocksoDevelopment/persephone/issues/2), [#3](h
 - [x] ADR 0005: Web Player и Subsonic API совместимость
 
 **Результат:** полный CI/CD pipeline, репозиторий готов к командной разработке.
+
+## Stage 10. Lidarr авто-скачивание
+
+**Цель:** пользователь видит бесконечную библиотеку — все треки доступны для поиска, скачивание происходит автоматически в фоне.
+
+- [x] Lidarr API клиент (поиск исполнителей, добавление в библиотеку)
+- [x] download_requests таблица (отслеживание статуса скачивания)
+- [x] Авто-запрос в Lidarr при поиске/воспроизведении недоступного трека
+- [x] qBittorrent + Prowlarr в docker-compose
+- [x] Скрипт автонастройки (npm run setup)
+- [x] API: GET/POST/GET/DELETE /api/v1/downloads/requests, GET /api/v1/downloads/status
+- [x] available_locally + download_status в поиске и деталях записи
+
+**Результат:** пользователь видит все треки, скачивание происходит автоматически через Lidarr + qBittorrent без ручного вмешательства.
 
 ## Правила планирования
 

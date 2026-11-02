@@ -1,6 +1,6 @@
 # app — backend Persephone Music
 
-**Статус:** Stage 8 — CI/CD Pipeline. Все этапы Roadmap (0–8) реализованы.
+**Статус:** Stage 10 — Lidarr авто-скачивание. Все этапы Roadmap (0–10) реализованы.
 
 Backend — модульный монолит на Node.js 22 LTS (JavaScript, ESM). API и Worker используют общий код, но запускаются отдельными процессами.
 
@@ -137,6 +137,27 @@ Worker публикует ключ `persephone:worker:heartbeat` в Redis с TTL
 
 Аутентификация через параметры `u` (username) и `t` (token) или `p` (пароль).
 
+## Lidarr Download API
+
+| Endpoint | Метод | Описание |
+|---|---|---|
+| `/api/v1/downloads/status` | GET | Проверить, настроен ли Lidarr |
+| `/api/v1/downloads/requests` | GET | Список запросов на скачивание пользователя |
+| `/api/v1/downloads/requests` | POST | Запросить скачивание исполнителя (авто, при поиске/воспроизведении) |
+| `/api/v1/downloads/requests/:id` | GET | Статус конкретного запроса |
+| `/api/v1/downloads/requests/:id` | DELETE | Отменить запрос на скачивание |
+
+## Как работает скачивание
+
+Пользователь не скачивает треки вручную. При поиске или попытке воспроизведения трека, которого нет локально, система автоматически:
+1. Создаёт запрос в `download_requests` со статусом `sending`
+2. Отправляет исполнителя в Lidarr (`addArtist` с `monitored: true`)
+3. Lidarr ищет релиз через Prowlarr → qBittorrent скачивает в `/downloads`
+4. Lidarr импортирует файл в `/music`
+5. Navidrome сканирует `/music`
+6. Persephone Media Indexer индексирует файл
+7. Трек становится доступен для стрима
+
 ## Тесты
 
 Unit-тесты не требуют внешних сервисов. Интеграционные тесты миграций включаются только при заданном `TEST_DATABASE_URL`, имя базы должно оканчиваться на `_test`:
@@ -187,3 +208,4 @@ TEST_DATABASE_URL=postgresql://persephone:***@127.0.0.1:55432/persephone_test np
 - [docs/INTEGRATIONS.md](../docs/INTEGRATIONS.md)
 - [docs/SECURITY.md](../docs/SECURITY.md)
 - [docs/adr/0005-web-player-subsonic.md](../docs/adr/0005-web-player-subsonic.md) — ADR для Web Player и Subsonic
+- [docs/adr/0006-download-stack.md](../docs/adr/0006-download-stack.md) — ADR для загрузки через Lidarr
