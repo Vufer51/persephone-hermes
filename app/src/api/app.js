@@ -10,6 +10,11 @@ import { registerRoutes as registerIndexRoutes } from '../modules/library/media-
 import { registerRoutes as registerLibraryRoutes } from '../modules/library/library-search.js';
 import { registerRoutes as registerPlaybackRoutes } from '../modules/playback/playback.js';
 import { registerRoutes as registerLastFmRoutes } from '../modules/lastfm/lastfm.js';
+import { registerRoutes as registerUsersRoutes } from '../modules/users/users.js';
+import { registerRoutes as registerRecommendationRoutes } from '../modules/recommendations/recommendation-engine.js';
+import { registerRoutes as registerPrefetchRoutes } from '../modules/prefetch/prefetch.js';
+import { registerRoutes as registerPlayerRoutes } from '../modules/player/player.js';
+import { registerRoutes as registerSubsonicRoutes } from '../modules/subsonic/subsonic.js';
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
 
@@ -90,6 +95,23 @@ export function buildApp({ config, database, redis, logger }) {
 
   // Регистрация маршрутов Last.fm
   registerLastFmRoutes(app);
+
+  // Регистрация маршрутов плейлистов
+
+  // Регистрация маршрутов пользовательских данных
+  registerUsersRoutes(app);
+
+  // Регистрация маршрутов рекомендаций
+  registerRecommendationRoutes(app);
+
+  // Регистрация маршрутов предварительной загрузки
+  registerPrefetchRoutes(app);
+
+  // Регистрация маршрутов веб-плеера
+  registerPlayerRoutes(app);
+
+  // Регистрация маршрутов Subsonic API совместимости
+  registerSubsonicRoutes(app);
 
   return app;
 }
