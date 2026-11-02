@@ -138,6 +138,107 @@ export class LastFmClient {
       duration: duration ? String(duration) : '',
     }, sessionKey);
   }
+
+  /**
+   * Получает любимые треки пользователя (user.getLovedTracks).
+   * @param {string} sessionKey
+   * @param {Object} [options={}]
+   * @param {number} [options.limit=50]
+   * @param {number} [options.page=1]
+   * @returns {Promise<Array>}
+   */
+  async getLovedTracks(sessionKey, options = {}) {
+    return this._signedGet('user.getLovedTracks', {
+      user: '', // будет заполнено из session
+      limit: String(options.limit ?? 50),
+      page: String(options.page ?? 1),
+    }, sessionKey);
+  }
+
+  /**
+   * Получает топ исполнителей пользователя (user.getTopArtists).
+   * @param {string} sessionKey
+   * @param {Object} [options={}]
+   * @param {string} [options.period='overall'] — overall | 7day | 1month | 3month | 6month | 12month
+   * @param {number} [options.limit=50]
+   * @param {number} [options.page=1]
+   * @returns {Promise<Array>}
+   */
+  async getTopArtists(sessionKey, options = {}) {
+    return this._signedGet('user.getTopArtists', {
+      user: '',
+      period: options.period ?? 'overall',
+      limit: String(options.limit ?? 50),
+      page: String(options.page ?? 1),
+    }, sessionKey);
+  }
+
+  /**
+   * Получает недавние треки пользователя (user.getRecentTracks).
+   * @param {string} sessionKey
+   * @param {Object} [options={}]
+   * @param {number} [options.limit=50]
+   * @param {number} [options.page=1]
+   * @param {number} [options.from] — Unix timestamp
+   * @param {number} [options.to] — Unix timestamp
+   * @returns {Promise<Array>}
+   */
+  async getRecentTracks(sessionKey, options = {}) {
+    const params = {
+      user: '',
+      limit: String(options.limit ?? 50),
+      page: String(options.page ?? 1),
+    };
+    if (options.from) {params.from = String(options.from);}
+    if (options.to) {params.to = String(options.to);}
+
+    return this._signedGet('user.getRecentTracks', params, sessionKey);
+  }
+
+  /**
+   * Выполняет подписанный GET запрос к Last.fm API.
+   * @param {string} method
+   * @param {Object} params
+   * @param {string} sessionKey
+   * @returns {Promise<Object>}
+   */
+  async _signedGet(method, params, sessionKey) {
+    const allParams = {
+      method,
+      api_key: this.apiKey,
+      sk: sessionKey,
+      format: 'json',
+      ...params,
+    };
+    allParams.api_sig = this._sign(allParams);
+
+    const url = new URL(this.baseUrl);
+    url.search = new URLSearchParams(allParams).toString();
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const response = await fetch(url.toString(), { signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        throw new Error(`Last.fm API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(`Last.fm error ${data.error}: ${data.message}`);
+      }
+      return data;
+    } catch (err) {
+      clearTimeout(timeout);
+      if (err.name === 'AbortError') {
+        throw new Error('Last.fm request timeout', { cause: err });
+      }
+      throw err;
+    }
+  }
 }
 
 /**
