@@ -14,6 +14,7 @@ import { registerRoutes as registerRecommendationRoutes } from '../modules/recom
 import { registerRoutes as registerPrefetchRoutes } from '../modules/prefetch/prefetch.js';
 import { registerRoutes as registerPlayerRoutes } from '../modules/player/player.js';
 import { registerRoutes as registerSubsonicRoutes } from '../modules/subsonic/subsonic.js';
+import { registerRoutes as registerLidarrRoutes } from '../modules/lidarr/lidarr.js';
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
 
@@ -108,6 +109,9 @@ export function buildApp({ config, database, redis, logger }) {
 
   // Регистрация маршрутов Subsonic API совместимости
   registerSubsonicRoutes(app);
+
+  // Регистрация маршрутов загрузки через Lidarr
+  registerLidarrRoutes(app);
 
   return app;
 }
