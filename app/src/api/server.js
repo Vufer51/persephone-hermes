@@ -27,8 +27,8 @@ const redis = createRedisClient(config.redis.url, { logger });
 
 const app = buildApp({
   config,
-  database: { ping: () => pingDatabase(pool) },
-  redis: { ping: () => pingRedis(redis) },
+  database: { pool, ping: () => pingDatabase(pool) },
+  redis,
 });
 
 const shutdown = createShutdownHandler({
