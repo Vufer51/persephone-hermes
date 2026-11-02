@@ -2,10 +2,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../src/api/app.js';
 import { generateToken } from '../src/modules/auth/crypto.js';
 
+// Mock Last.fm client to avoid real HTTP calls
+const mockLastFmClient = {
+  getSession: vi.fn(async () => 'mock_session_key'),
+  updateNowPlaying: vi.fn(async () => ({ success: true })),
+  getLovedTracks: vi.fn(async () => ({ lovedtracks: { track: [], '@attr': { totalPages: '1' } } })),
+  getTopArtists: vi.fn(async () => ({ topartists: { artist: [], '@attr': { totalPages: '1' } } })),
+  getRecentTracks: vi.fn(async () => ({ recenttracks: { track: [], '@attr': { totalPages: '1' } } })),
+};
+
+// Mock the lastfm-client module
+vi.mock('../../src/integrations/lastfm-client.js', () => ({
+  createLastFmClient: vi.fn(() => mockLastFmClient),
+}));
+
 /** @type {Array<import('fastify').FastifyInstance>} */
 const apps = [];
 
-function createApp(overrides = {}) {
+function createApp(_overrides = {}) {
   const mockPool = {
     query: vi.fn(async () => ({ rows: [] })),
   };
@@ -31,7 +45,6 @@ function createApp(overrides = {}) {
     database: mockDatabase,
     redis: mockRedis,
     logger: false,
-    ...overrides,
   });
   apps.push(app);
   return app;
@@ -40,6 +53,7 @@ function createApp(overrides = {}) {
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((app) => app.close()));
   vi.restoreAllMocks();
+  Object.values(mockLastFmClient).forEach((fn) => fn.mockReset());
 });
 
 function makeAuth(token) {
@@ -170,6 +184,107 @@ describe('Last.fm integration routes', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json().disconnected).toBe(true);
+    });
+  });
+
+  describe('POST /api/v1/integrations/lastfm/now-playing', () => {
+    it('должен возвращать 401 без аутентификации', async () => {
+      const app = createApp();
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/integrations/lastfm/now-playing',
+        payload: { artist: 'Test Artist', track: 'Test Track' },
+      });
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('должен возвращать 400 без обязательных полей', async () => {
+      const app = createApp();
+      app.dependencies.redis.get.mockResolvedValue(JSON.stringify({
+        id: '55555555-5555-5555-5555-555555555555',
+        email: 'test@test.com',
+        username: 'testuser',
+        role: 'user',
+        sessionId: '33333333-3333-3333-3333-333333333333',
+      }));
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/integrations/lastfm/now-playing',
+        headers: makeAuth(validToken),
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('должен обновлять Now Playing в Last.fm', async () => {
+      const app = createApp();
+      app.dependencies.redis.get.mockResolvedValue(JSON.stringify({
+        id: '55555555-5555-5555-5555-555555555555',
+        email: 'test@test.com',
+        username: 'testuser',
+        role: 'user',
+        sessionId: '33333333-3333-3333-3333-333333333333',
+      }));
+      app.dependencies.database.pool.query
+        .mockResolvedValueOnce({ rows: [{ session_key_encrypted: 'encrypted_key', encryption_key_version: 1 }] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/integrations/lastfm/now-playing',
+        headers: makeAuth(validToken),
+        payload: { artist: 'Test Artist', track: 'Test Track', album: 'Test Album', duration: 180 },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().success).toBe(true);
+      expect(mockLastFmClient.updateNowPlaying).toHaveBeenCalledWith(
+        { artist: 'Test Artist', track: 'Test Track', album: 'Test Album', duration: 180 },
+        'mock_session_key',
+      );
+    });
+  });
+
+  describe('POST /api/v1/integrations/lastfm/sync', () => {
+    it('должен возвращать 401 без аутентификации', async () => {
+      const app = createApp();
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/integrations/lastfm/sync',
+      });
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('должен запускать синхронизацию и возвращать результаты', async () => {
+      const app = createApp();
+      app.dependencies.redis.get.mockResolvedValue(JSON.stringify({
+        id: '55555555-5555-5555-5555-555555555555',
+        email: 'test@test.com',
+        username: 'testuser',
+        role: 'user',
+        sessionId: '33333333-3333-3333-3333-333333333333',
+      }));
+      app.dependencies.database.pool.query
+        .mockResolvedValueOnce({ rows: [{ session_key_encrypted: 'encrypted_key', encryption_key_version: 1 }] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/integrations/lastfm/sync',
+        headers: makeAuth(validToken),
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().success).toBe(true);
+      expect(response.json().results).toBeDefined();
+      expect(response.json().results.lovedTracks).toBe(0);
+      expect(response.json().results.topArtists).toBe(0);
+      expect(response.json().results.recentTracks).toBe(0);
+      expect(mockLastFmClient.getLovedTracks).toHaveBeenCalled();
+      expect(mockLastFmClient.getTopArtists).toHaveBeenCalled();
+      expect(mockLastFmClient.getRecentTracks).toHaveBeenCalled();
     });
   });
 });

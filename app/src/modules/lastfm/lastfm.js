@@ -75,4 +75,39 @@ export function registerRoutes(app) {
       return { disconnected: true };
     },
   });
+
+  // POST /api/v1/integrations/lastfm/now-playing — обновление Now Playing
+  app.post('/api/v1/integrations/lastfm/now-playing', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['artist', 'track'],
+        properties: {
+          artist: { type: 'string', minLength: 1, maxLength: 256 },
+          track: { type: 'string', minLength: 1, maxLength: 256 },
+          album: { type: 'string', maxLength: 256 },
+          duration: { type: 'integer', minimum: 1 },
+        },
+      },
+    },
+    preHandler: [app.authMiddleware],
+    handler: async (request) => {
+      const userId = request.user.id;
+      const { artist, track, album, duration } = request.body;
+
+      await lastfmService.updateNowPlaying(userId, { artist, track, album, duration });
+      return { success: true };
+    },
+  });
+
+  // POST /api/v1/integrations/lastfm/sync — полная синхронизация данных
+  app.post('/api/v1/integrations/lastfm/sync', {
+    preHandler: [app.authMiddleware],
+    handler: async (request) => {
+      const userId = request.user.id;
+
+      const results = await lastfmService.syncUserData(userId);
+      return { success: true, results };
+    },
+  });
 }
