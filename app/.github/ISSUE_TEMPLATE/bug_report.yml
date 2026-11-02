@@ -1,0 +1,93 @@
+name: Bug Report
+description: Create a bug report for Persephone Music
+labels: [type: bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug in Persephone Music! Please fill out this form completely.
+
+  - type: input
+    id: title
+    attributes:
+      label: Bug title
+      description: Short and descriptive title
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the bug in detail
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the bug
+      placeholder: |
+        1. Go to '/api/v1/...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happens
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version of Persephone Music are you using?
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - auth
+        - library
+        - playback
+        - lastfm
+        - recommendations
+        - prefetch
+        - player
+        - subsonic
+        - api
+        - database
+        - worker
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 - Critical
+        - P1 - High
+        - P2 - Normal
+        - P3 - Low
+      default: "P2 - Normal"
+    validations:
+      required: true
