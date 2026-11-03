@@ -55,17 +55,36 @@ app/
 
 ## Локальный запуск
 
+### Вариант 1: Полный запуск через Docker Compose (рекомендуется)
+
 Из корня репозитория:
 
 ```bash
 cp .env.example .env
-# заполнить POSTGRES_PASSWORD, SESSION_SECRET и SECRET_ENCRYPTION_KEY
+# Заполните переменные в .env: POSTGRES_PASSWORD, SESSION_SECRET, SECRET_ENCRYPTION_KEY
+# Для Lidarr: LIDARR_API_KEY, PROWLLARR_API_KEY (получите в Web UI после первого запуска)
+docker compose up -d
+```
+
+Это запустит все сервисы:
+- **postgres** — база данных (порт 5432)
+- **redis** — кэш и очереди (порт 6379)
+- **api** — Persephone API (порт 3000)
+- **worker** — фоновые задачи (scrobble, префетч)
+- **navidrome** — музыкальный сервер (порт 4533)
+- **lidarr** — менеджер музыкальной библиотеки (порт 8686)
+- **prowlarr** — индексатор торрентов (порт 9696)
+- **qbittorrent** — загрузчик торрентов (порт 8080)
+- **migrate** — применение миграций БД (выполнится один раз)
+- **setup** — автоматическая настройка Lidarr + qBittorrent (выполнится один раз)
+
+### Вариант 2: Только инфраструктура (без Lidarr/Prowlarr/qBittorrent)
+
+```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres redis
 ```
 
-`docker-compose.dev.yml` публикует PostgreSQL и Redis только на `127.0.0.1`.
-
-Затем:
+Затем запуск API и worker локально:
 
 ```bash
 cd app
@@ -76,14 +95,48 @@ npm run dev:api
 npm run dev:worker
 ```
 
-`DATABASE_URL` и `REDIS_URL` в `.env` должны указывать на `127.0.0.1` (см. `.env.example`).
-
-Секреты можно сгенерировать так:
+### Генерация секретов
 
 ```bash
 openssl rand -base64 48   # SESSION_SECRET
 openssl rand -base64 32   # SECRET_ENCRYPTION_KEY (ровно 32 байта)
+openssl rand -base64 16   # POSTGRES_PASSWORD
 ```
+
+### Настройка Lidarr (после первого запуска)
+
+1. Откройте `http://127.0.0.1:8686` — войдите в Lidarr
+2. Перейдите в **Settings → General → API Key** — скопируйте ключ
+3. Установите `LIDARR_API_KEY` в `.env`
+4. В **Media Management → Root Folders** добавьте папку `/music`
+5. В **Quality Profiles** создайте профиль качества
+6. В Prowlarr (`http://127.0.0.1:9696`) добавьте индексаторы (трекеры)
+7. В Lidarr добавьте Prowlarr как индексатор и qBittorrent как загрузчик
+
+### Автоматическая настройка (опционально)
+
+Если у вас уже есть API-ключи для Lidarr и Prowlarr:
+
+```bash
+cd app
+PROWLLARR_API_KEY=<ключ_из_prowlarr> \
+LIDARR_API_KEY=<ключ_из_lidarr> \
+npm run setup
+```
+
+Этот скрипт автоматически подключит qBittorrent к Lidarr и Prowlarr к Lidarr.
+
+### Проверка работы
+
+```bash
+# API health check
+curl http://127.0.0.1:3000/api/v1/health/ready
+
+# Поиск в библиотеке
+curl -s "http://127.0.0.1:3000/api/v1/library/search?q=test" \
+  -H "Authorization: Bearer <ваш_токен>"
+```
+
 
 ## Команды
 
