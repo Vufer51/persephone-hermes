@@ -20,19 +20,19 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "argon2": "^0.41.1",
-    "bullmq": "^6.5.3",
-    "fastify": "^5.12.7",
+    "argon2": "^0.45.2",
+    "bullmq": "^6.7.1",
+    "fastify": "^5.12.8",
     "ioredis": "^6.0.0",
-    "music-metadata": "^12.3.3",
+    "music-metadata": "^12.3.5",
     "pg": "^8.23.1",
     "pino": "^10.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.14.0",
-    "globals": "^17.13.0",
-    "vitest": "^5.0.5"
+    "globals": "^17.14.0",
+    "vitest": "^5.1.0"
   },
   "overrides": {
     "minimatch": "^11.0.1"
