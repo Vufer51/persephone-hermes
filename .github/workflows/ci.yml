@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Node.js
         uses: actions/setup-node@v4
@@ -84,7 +84,7 @@ jobs:
       TEST_DATABASE_URL: postgresql://persephone:test@127.0.0.1:5432/persephone_test
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Node.js
         uses: actions/setup-node@v4
@@ -123,7 +123,7 @@ jobs:
       SECRET_ENCRYPTION_KEY: Y2ktc2VjcmV0LWVuY3J5cHRpb24ta2V5LTMyLWJ5dGU=
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Сборка production-образа
         run: docker build --target production --tag persephone-app:ci ./app
